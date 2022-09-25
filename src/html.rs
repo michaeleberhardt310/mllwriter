@@ -1,8 +1,6 @@
 /// First version of a HTML-only-Writer
 
-use std::result::Result;
-
-
+/// The Writer struct/class, to be used to fill the content-string with HTML.
 #[derive(Debug, Clone)]
 pub struct Writer {
     // holds the whole file content as long the Writer is used
