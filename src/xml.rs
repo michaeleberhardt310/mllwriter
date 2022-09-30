@@ -70,7 +70,7 @@ impl MLLWriter for XMLWriter {
 
     fn clear(&mut self) { 
         self.core.clear(); 
-        self.core.indent_step_size = 4;
+        self.core.indent_step_size = 2;
     }
 }
 
@@ -105,12 +105,12 @@ mod tests {
     fn test_new_n_clear() {
         let mut wr = XMLWriter::new();
         assert_eq!(wr.core.content, "");
-        assert_eq!(wr.core.indent_step_size, 4);
+        assert_eq!(wr.core.indent_step_size, 2);
         assert_eq!(wr.core.indent, "");
         assert_eq!(wr.core.block_stack, Vec::<String>::new());
 
         wr.w_open_element("div");
-        wr.set_indent_step(2);
+        wr.set_indent_step(4);
         wr.set_indent_step_size(8);
         wr.clear();
         assert_eq!(wr.core.content, "");
@@ -144,7 +144,7 @@ mod tests {
         wr.w_property("style", "width: auto");
         wr.w_lf_dec();
         wr.w_close_element();
-        assert_eq!(wr.core.content, "<div class=\"container\">\n    <img style=\"width: auto\">\n</div>")
+        assert_eq!(wr.core.content, "<div class=\"container\">\n  <img style=\"width: auto\">\n</div>")
     }
 
     #[test]
