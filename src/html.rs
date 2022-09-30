@@ -1,4 +1,4 @@
-/// First version of a HTML-only-Writer
+/// This module implements a HTML-variant of the MLLWriter-trait
 use super::writer::*;
 
 /// The Writer struct/class, to be used to fill the content-string with HTML.
@@ -9,16 +9,14 @@ pub struct HTMLWriter {
 }
 
 
-impl MLLWriter for HTMLWriter {
-    // Type declaration
-    type MLLWriter = HTMLWriter;
-
-    
-    fn new() -> HTMLWriter {
-        HTMLWriter { core: WriterCore::new() }
+impl HTMLWriter {
+    pub fn new() -> HTMLWriter {
+        HTMLWriter { core: WriterCore::new(4) }
     }
+}
 
-    
+
+impl MLLWriter for HTMLWriter {
     fn w_open_element(&mut self, tag: &str) {
         self.core.content.push_str(&["<".to_string() + tag + ">"].concat());
         self.core.block_stack.push(tag.to_string());
@@ -55,8 +53,6 @@ impl MLLWriter for HTMLWriter {
         self.core.content.push_str(">");
     }
 
-    
-    fn clear(&mut self) { self.core.clear(); }
 
     fn w_lf(&mut self) { self.core.w_lf(); }
     
@@ -71,12 +67,35 @@ impl MLLWriter for HTMLWriter {
     fn set_indent_step(&mut self, indent_step: usize) { self.core.set_indent_step(indent_step); }
 
     fn set_indent_step_size(&mut self, indent_step_size: usize) { self.core.set_indent_step_size(indent_step_size); }
+
+    fn clear(&mut self) { 
+        self.core.clear(); 
+        self.core.indent_step_size = 4;
+    }
 }
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_new_n_clear() {
+        let mut wr = HTMLWriter::new();
+        assert_eq!(wr.core.content, "");
+        assert_eq!(wr.core.indent_step_size, 4);
+        assert_eq!(wr.core.indent, "");
+        assert_eq!(wr.core.block_stack, Vec::<String>::new());
+
+        wr.w_open_element("div");
+        wr.set_indent_step(4);
+        wr.set_indent_step_size(8);
+        wr.clear();
+        assert_eq!(wr.core.content, "");
+        assert_eq!(wr.core.indent_step_size, 4);
+        assert_eq!(wr.core.indent, "");
+        assert_eq!(wr.core.block_stack, Vec::<String>::new());
+    }
 
     #[test]
     fn test_single_element() {

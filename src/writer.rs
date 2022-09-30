@@ -2,15 +2,6 @@
 /// be a version which prints a HTML-file, a XML-file or a JSON-file. All those file-types have a structural-pattern
 /// in common, even when a JSON-file is no markup-file - that's why it is a markup-language-like writer.
 pub trait MLLWriter {
-    // The ascociated sub-type, e.g. HTMLWriter, XMLWriter or JSONWriter
-    type MLLWriter;
-
-    /// Method generates a new Writer with empty content and presets, e.g. zero indent
-    fn new() -> Self::MLLWriter;
-
-    /// Method resets the writer to defaults and empties the content-string as well
-    fn clear(&mut self);
-
     /// Method opens a new block, e.g. <div> tag
     fn w_open_element(&mut self, tag: &str);
 
@@ -49,6 +40,9 @@ pub trait MLLWriter {
     /// Set the indent-step-size (the number of whitespaces per indent-step). Default is 4 whitespaces. Method results an Err if
     /// called after started editing (content isn't empty anymore).
     fn set_indent_step_size(&mut self, indent_step_size: usize);
+
+    /// Method resets the writer to defaults and empties the content-string as well
+    fn clear(&mut self);
 }
 
 
@@ -87,19 +81,19 @@ pub struct WriterCore {
     pub(crate) block_stack: Vec<String>
 }
 
-impl MLLWriter for WriterCore {
-    type MLLWriter = WriterCore;
-
+impl WriterCore {
     // Methods to be implemented by each subtype individually
-    fn new() -> WriterCore {
+    pub fn new(indent_step_size: usize) -> WriterCore {
         WriterCore{
             content: String::new(),
-            indent_step_size: 4,
+            indent_step_size: indent_step_size,
             indent: String::new(),
             block_stack: Vec::new(),
         }
     }
+}
 
+impl MLLWriter for WriterCore {
     fn w_open_element(&mut self, _tag: &str) {
         // Nothing, because each variant does it in its own way
     }
@@ -118,14 +112,6 @@ impl MLLWriter for WriterCore {
 
     fn w_properties(&mut self, _properties: &Property) {
         // Nothing, because each variant does it in its own way
-    }
-
-    // Default implementations, can propably reused by every subtype
-    fn clear(&mut self) {
-        self.content.clear();
-        self.set_indent_step(0);
-        self.set_indent_step_size(4);
-        self.block_stack.clear();
     }
 
     fn w_lf(&mut self) {
@@ -165,6 +151,13 @@ impl MLLWriter for WriterCore {
     fn set_indent_step_size(&mut self, indent_step_size: usize) {
         self.indent_step_size = indent_step_size;
     }
+
+    fn clear(&mut self) {
+        self.content.clear();
+        self.set_indent_step(0);
+        // self.set_indent_step_size(4);
+        self.block_stack.clear();
+    }
 }
 
 
@@ -183,26 +176,8 @@ mod tests {
     }
 
     #[test]
-    fn test_new_n_clear() {
-        let mut wr = WriterCore::new();
-        assert_eq!(wr.content, "");
-        assert_eq!(wr.indent_step_size, 4);
-        assert_eq!(wr.indent, "");
-        assert_eq!(wr.block_stack, Vec::<String>::new());
-
-        wr.w_open_element("div");
-        wr.set_indent_step(4);
-        wr.set_indent_step_size(8);
-        wr.clear();
-        assert_eq!(wr.content, "");
-        assert_eq!(wr.indent_step_size, 4);
-        assert_eq!(wr.indent, "");
-        assert_eq!(wr.block_stack, Vec::<String>::new());
-    }
-
-    #[test]
     fn test_indent_methods() {
-        let mut wr = WriterCore::new();
+        let mut wr = WriterCore::new(4);
         assert_eq!(wr.indent, "".to_string());
 
         wr.set_indent_step(2);
