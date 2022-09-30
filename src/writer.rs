@@ -1,6 +1,9 @@
 /// Trait MLLWriter (Markup-language-like Writer) describes a common behavior for all sub-types. Sub-types will
 /// be a version which prints a HTML-file, a XML-file or a JSON-file. All those file-types have a structural-pattern
 /// in common, even when a JSON-file is no markup-file - that's why it is a markup-language-like writer.
+ 
+use std::result::Result;
+
 pub trait MLLWriter {
     /// Method opens a new block, e.g. <div> tag
     fn w_open_element(&mut self, tag: &str);
@@ -157,6 +160,29 @@ impl MLLWriter for WriterCore {
         self.set_indent_step(0);
         // self.set_indent_step_size(4);
         self.block_stack.clear();
+    }
+}
+
+
+impl std::fmt::Display for WriterCore {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "indent_step_size: {}\nindent: {}\nblock_stack: {:?}\n{}\n",
+            self.indent_step_size, self.indent.len(), self.block_stack, self.content)
+    }
+}
+
+
+impl std::fmt::Write for WriterCore {
+    fn write_str(&mut self, s: &str) -> Result<(), std::fmt::Error> {
+        self.content.write_str(s)
+    }
+
+    fn write_char(&mut self, c: char) -> Result<(), std::fmt::Error> {
+        self.content.write_char(c)
+    }
+
+    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> Result<(), std::fmt::Error> {
+        self.content.write_fmt(args)
     }
 }
 

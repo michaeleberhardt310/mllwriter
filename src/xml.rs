@@ -3,20 +3,20 @@ use super::writer::*;
 
 /// The Writer struct/class, to be used to fill the content-string with HTML.
 #[derive(Debug, Clone)]
-pub struct HTMLWriter {
+pub struct XMLWriter {
     /// WriterCore in a composition
     pub core: WriterCore
 }
 
 
-impl HTMLWriter {
-    pub fn new() -> HTMLWriter {
-        HTMLWriter { core: WriterCore::new(4) }
+impl XMLWriter {
+    pub fn new() -> XMLWriter {
+        XMLWriter { core: WriterCore::new(2) }
     }
 }
 
 
-impl MLLWriter for HTMLWriter {
+impl MLLWriter for XMLWriter {
     fn w_open_element(&mut self, tag: &str) {
         self.core.content.push_str(&["<".to_string() + tag + ">"].concat());
         self.core.block_stack.push(tag.to_string());
@@ -75,14 +75,14 @@ impl MLLWriter for HTMLWriter {
 }
 
 
-impl std::fmt::Display for HTMLWriter {
+impl std::fmt::Display for XMLWriter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.core.fmt(f)
     }
 }
 
 
-impl std::fmt::Write for HTMLWriter {
+impl std::fmt::Write for XMLWriter {
     fn write_str(&mut self, s: &str) -> Result<(), std::fmt::Error> {
         self.core.write_str(s)
     }
@@ -103,32 +103,32 @@ mod tests {
 
     #[test]
     fn test_new_n_clear() {
-        let mut wr = HTMLWriter::new();
+        let mut wr = XMLWriter::new();
         assert_eq!(wr.core.content, "");
         assert_eq!(wr.core.indent_step_size, 4);
         assert_eq!(wr.core.indent, "");
         assert_eq!(wr.core.block_stack, Vec::<String>::new());
 
         wr.w_open_element("div");
-        wr.set_indent_step(4);
+        wr.set_indent_step(2);
         wr.set_indent_step_size(8);
         wr.clear();
         assert_eq!(wr.core.content, "");
-        assert_eq!(wr.core.indent_step_size, 4);
+        assert_eq!(wr.core.indent_step_size, 2);
         assert_eq!(wr.core.indent, "");
         assert_eq!(wr.core.block_stack, Vec::<String>::new());
     }
 
     #[test]
     fn test_single_element() {
-        let mut wr = HTMLWriter::new();
+        let mut wr = XMLWriter::new();
         wr.w_single_element("img");
         assert_eq!(wr.core.content, "<img>".to_string());
     }
 
     #[test]
     fn test_dual_elements() {
-        let mut wr = HTMLWriter::new();
+        let mut wr = XMLWriter::new();
         wr.w_open_element("div");
         wr.w_close_element();
         assert_eq!(wr.core.content, "<div></div>".to_string());
@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn test_mixed_entries() {
-        let mut wr = HTMLWriter::new();
+        let mut wr = XMLWriter::new();
         wr.w_open_element("div");
         wr.w_property("class", "container");
         wr.w_lf_inc();
@@ -151,7 +151,7 @@ mod tests {
     fn test_property_string() {
         let mut properties = Property::new("class", "container");
         properties.add("style", "width: auto");
-        let mut wr = HTMLWriter::new();
+        let mut wr = XMLWriter::new();
         wr.w_single_element("img");
         wr.w_properties(&properties);
         assert_eq!(wr.core.content, "<img class=\"container\" style=\"width: auto\">".to_string());

@@ -84,6 +84,28 @@ impl MLLWriter for JSONWriter {
 }
 
 
+impl std::fmt::Display for JSONWriter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.core.fmt(f)
+    }
+}
+
+
+impl std::fmt::Write for JSONWriter {
+    fn write_str(&mut self, s: &str) -> Result<(), std::fmt::Error> {
+        self.core.write_str(s)
+    }
+
+    fn write_char(&mut self, c: char) -> Result<(), std::fmt::Error> {
+        self.core.write_char(c)
+    }
+
+    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> Result<(), std::fmt::Error> {
+        self.core.write_fmt(args)
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
