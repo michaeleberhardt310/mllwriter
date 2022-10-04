@@ -1,4 +1,5 @@
-# mllwriter
-Markup-language-like Writer written in Rust
+# Markup-language-like Writer (MLLWriter)
 
-A small library which provides methods to write easily file contents for markup languages (for example HTML and XML) and files which are like a markup, but are no real ones (for example JSON). This shall provide the opportunity for automatically generated websites and other config files.
+The MLLWriter (Markup-language-like Writer) is a small collection of writer-tools to simplify the automated writing process with HTML, XML and JSON-files. This crate contains the trait MLLWriter to generalize all of those sub-types, and it contains an object for each writer type, e.g. HTMLWriter, XMLWriter and JSONWriter.
+
+For further informations, please check the included rust/cargo documentation.
