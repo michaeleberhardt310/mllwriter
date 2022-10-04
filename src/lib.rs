@@ -235,7 +235,10 @@ impl Default for HTMLWriter {
 
 
 impl MLLWriter for HTMLWriter {
+    /// Accepts only ASCII-lowercase
     fn w_open_element(&mut self, tag: &str) {
+        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
+
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
@@ -250,15 +253,21 @@ impl MLLWriter for HTMLWriter {
         self.content.push('>');
     }
 
-    
+
+    /// Accepts only ASCII-lowercase
     fn w_single_element(&mut self, tag: &str) {
+        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
+
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
     }
 
-    
+
+    /// Accepts only ASCII-lowercase for the name-attribute
     fn w_property(&mut self, name: &str, value: &str) {
+        assert!(name.chars().all(|x| x.is_ascii_lowercase()));
+
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then add the property-value-pair and close the tag again after insertion
@@ -357,7 +366,10 @@ impl Default for XMLWriter {
 
 
 impl MLLWriter for XMLWriter {
+    /// Accepts only ASCII-lowercase for the name-attribute
     fn w_open_element(&mut self, tag: &str) {
+        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
+
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
@@ -373,14 +385,20 @@ impl MLLWriter for XMLWriter {
     }
 
     
+    /// Accepts only ASCII-lowercase for the name-attribute
     fn w_single_element(&mut self, tag: &str) {
+        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
+
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
     }
 
     
+    /// Accepts only ASCII-lowercase for the name-attribute
     fn w_property(&mut self, name: &str, value: &str) {
+        assert!(name.chars().all(|x| x.is_ascii_lowercase()));
+
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then add the property-value-pair and close the tag again after insertion
