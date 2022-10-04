@@ -8,6 +8,7 @@ pub trait MLLWriter {
     /// Method opens a new block, e.g. <div> tag
     fn w_open_element(&mut self, tag: &str);
 
+    
     /// Method closes the last opened block, e.g. </div> tag.
     fn w_close_element(&mut self);
 
