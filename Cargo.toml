@@ -2,7 +2,9 @@
 name = "mllwriter"
 version = "0.1.0"
 edition = "2021"
+authors = "Michael Eberhardt"
+repository = "https://github.com/michaeleberhardt310/mllwriter"
+keywords = ["html", "xml", "json"]
+category = ["accessibility", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
