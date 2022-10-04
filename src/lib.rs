@@ -25,7 +25,9 @@
 //! ## Examples
 //! 
 //! ```
+//! # use mllwriter::{MLLWriter,HTMLWriter};
 //! let mut wr = HTMLWriter::new();
+//! 
 //! wr.w_open_element("div");
 //! wr.w_property("class", "container");
 //! wr.w_lf_inc();
@@ -36,7 +38,9 @@
 //! ```
 //! 
 //! ```
+//! # use mllwriter::{MLLWriter,JSONWriter};
 //! let mut wr = JSONWriter::new();
+//! 
 //! wr.w_open_element("");
 //! wr.w_property("First Name", "\"Muster\"");
 //! wr.w_property("Second Name", "\"Max\"");
@@ -190,14 +194,11 @@ impl MLLWriter for WriterCore {
     }
 
     fn dec_indent_step(&mut self) {
-        let steps = if self.indent_step_size > self.indent.len() { 
-            self.indent.len() 
-        }
-        else { 
-            self.indent_step_size 
-        };
-        for _i in 0..steps {
-            self.indent.pop();
+        let len = self.indent.len();
+        if self.indent_step_size > len {
+            self.indent = String::new();
+        } else {
+            self.indent.truncate(len - self.indent_step_size);
         }
     }
 
@@ -485,7 +486,7 @@ impl JSONWriter {
         if self.core.content.ends_with('{') {
             // if it is a '{' add a line-feed with indent-increment
             self.w_lf_inc();
-        } else if self.core.content.is_empty() {
+        } else if !self.core.content.is_empty() {
             // there must be at least one property, so separate them by a comma
             self.core.content.push_str(&[",\n".to_string() + &self.core.indent].concat());
         }
@@ -499,7 +500,7 @@ impl JSONWriter {
 impl MLLWriter for JSONWriter {
     fn w_open_element(&mut self, tag: &str) {
         self.prepare_property_write();
-        if tag.is_empty() {
+        if !tag.is_empty() {
             self.core.content.push_str(&["\"".to_string() + tag + "\":\n" + &self.core.indent + "{"].concat());
         } else {
             self.core.content.push('{');
@@ -577,7 +578,7 @@ mod tests {
     // ============================================================================================
     // Tests for the WriterCore and the Property-struct
     #[test]
-    fn test_property() {
+    fn property_basic() {
         let mut prop = Property::new("class", "superhero");
         assert_eq!(prop.p[0], ("class".to_string(), "superhero".to_string()));
 
@@ -586,7 +587,7 @@ mod tests {
     }
 
     #[test]
-    fn test_indent_methods() {
+    fn writercore_indent_methods() {
         let mut wr = WriterCore::new(4);
         assert_eq!(wr.indent, "".to_string());
 
@@ -607,7 +608,7 @@ mod tests {
     // ============================================================================================
     // Tests for HTMLWriter
     #[test]
-    fn test_html_new_n_clear() {
+    fn html_new_n_clear() {
         let mut wr = HTMLWriter::new();
         assert_eq!(wr.core.content, "");
         assert_eq!(wr.core.indent_step_size, 4);
@@ -625,14 +626,14 @@ mod tests {
     }
 
     #[test]
-    fn test_html_single_element() {
+    fn html_single_element() {
         let mut wr = HTMLWriter::new();
         wr.w_single_element("img");
         assert_eq!(wr.core.content, "<img>".to_string());
     }
 
     #[test]
-    fn test_html_dual_elements() {
+    fn html_dual_elements() {
         let mut wr = HTMLWriter::new();
         wr.w_open_element("div");
         wr.w_close_element();
@@ -640,7 +641,7 @@ mod tests {
     }
 
     #[test]
-    fn test_html_mixed_entries() {
+    fn html_mixed_entries() {
         let mut wr = HTMLWriter::new();
         wr.w_open_element("div");
         wr.w_property("class", "container");
@@ -653,7 +654,7 @@ mod tests {
     }
 
     #[test]
-    fn test_html_property_string() {
+    fn html_property_string() {
         let mut properties = Property::new("class", "container");
         properties.add("style", "width: auto");
         let mut wr = HTMLWriter::new();
@@ -670,7 +671,7 @@ mod tests {
     // ============================================================================================
     // Tests for the XMLWriter
     #[test]
-    fn test_xml_new_n_clear() {
+    fn xml_new_n_clear() {
         let mut wr = XMLWriter::new();
         assert_eq!(wr.core.content, "");
         assert_eq!(wr.core.indent_step_size, 2);
@@ -688,14 +689,14 @@ mod tests {
     }
 
     #[test]
-    fn test_xml_single_element() {
+    fn xml_single_element() {
         let mut wr = XMLWriter::new();
         wr.w_single_element("img");
         assert_eq!(wr.core.content, "<img>".to_string());
     }
 
     #[test]
-    fn test_xml_dual_elements() {
+    fn xml_dual_elements() {
         let mut wr = XMLWriter::new();
         wr.w_open_element("div");
         wr.w_close_element();
@@ -703,7 +704,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xml_mixed_entries() {
+    fn xml_mixed_entries() {
         let mut wr = XMLWriter::new();
         wr.w_open_element("div");
         wr.w_property("class", "container");
@@ -716,7 +717,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xml_property_string() {
+    fn xml_property_string() {
         let mut properties = Property::new("class", "container");
         properties.add("style", "width: auto");
         let mut wr = XMLWriter::new();
@@ -733,13 +734,13 @@ mod tests {
     // ============================================================================================
     #[test]
     #[should_panic(expected = "there is no single_element in the JSONWriter")]
-    fn test_json_single_element() {
+    fn json_single_element() {
         let mut wr = JSONWriter::new();
         wr.w_single_element("img");    
     }
 
     #[test]
-    fn test_json_dual_elements() {
+    fn json_dual_elements() {
         let mut wr = JSONWriter::new();
         wr.w_open_element("");
         wr.w_close_element();
@@ -747,7 +748,7 @@ mod tests {
     }
 
     #[test]
-    fn test_json_mixed_entries() {
+    fn json_mixed_entries() {
         let mut wr = JSONWriter::new();
         wr.w_open_element("");
         wr.w_property("Name", "\"Eberhardt\"");
@@ -762,7 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn test_json_property_string() {
+    fn json_property_string() {
         let mut properties = Property::new("Name", "\"Eberhardt\"");
         properties.add("Alter", "35");
         let mut wr = JSONWriter::new();
