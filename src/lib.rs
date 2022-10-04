@@ -107,6 +107,7 @@ pub struct Property {
     pub(crate) p: Vec<(String,String)>
 }
 
+
 impl Property {
     /// A default new method with one first property pair to be passed
     pub fn new(name: &str, value: &str) -> Property {
@@ -142,6 +143,7 @@ pub struct WriterCore {
     pub(crate) block_stack: Vec<String>
 }
 
+
 impl WriterCore {
     // Methods to be implemented by each subtype individually
     pub fn new(indent_step_size: usize) -> WriterCore {
@@ -153,6 +155,7 @@ impl WriterCore {
         }
     }
 }
+
 
 impl MLLWriter for WriterCore {
     fn w_open_element(&mut self, _tag: &str) {
