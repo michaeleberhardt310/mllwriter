@@ -193,12 +193,12 @@ impl WriterCore {
     }
 
 
-    fn set_indent_step(&mut self, indent_step: usize) {
+    pub fn set_indent_step(&mut self, indent_step: usize) {
         self.indent = " ".repeat(indent_step * self.indent_step_size);
     }
 
 
-    fn set_indent_step_size(&mut self, indent_step_size: usize) {
+    pub fn set_indent_step_size(&mut self, indent_step_size: usize) {
         self.indent_step_size = indent_step_size;
     }
 }
