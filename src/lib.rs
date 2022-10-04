@@ -143,7 +143,7 @@ impl WriterCore {
     pub fn new(indent_step_size: usize) -> WriterCore {
         WriterCore{
             content: String::new(),
-            indent_step_size: indent_step_size,
+            indent_step_size,
             indent: String::new(),
             block_stack: Vec::new(),
         }
@@ -202,7 +202,7 @@ impl MLLWriter for WriterCore {
     }
 
     fn set_indent_step(&mut self, indent_step: usize) {
-        self.indent = " ".repeat(indent_step * self.indent_step_size).to_string();
+        self.indent = " ".repeat(indent_step * self.indent_step_size);
     }
 
     fn set_indent_step_size(&mut self, indent_step_size: usize) {
@@ -259,6 +259,13 @@ impl HTMLWriter {
 }
 
 
+impl Default for HTMLWriter {
+    fn default() -> Self {
+        HTMLWriter::new()
+    }
+}
+
+
 impl MLLWriter for HTMLWriter {
     fn w_open_element(&mut self, tag: &str) {
         self.core.content.push_str(&["<".to_string() + tag + ">"].concat());
@@ -293,7 +300,7 @@ impl MLLWriter for HTMLWriter {
             &(" ".to_string() + &x.0 + "=\"" + &x.1 + "\"")
         ));
         // Finally, we close the tag again
-        self.core.content.push_str(">");
+        self.core.content.push('>');
     }
 
 
@@ -358,6 +365,13 @@ impl XMLWriter {
 }
 
 
+impl Default for XMLWriter {
+    fn default() -> Self {
+        XMLWriter::new()
+    }
+}
+
+
 impl MLLWriter for XMLWriter {
     fn w_open_element(&mut self, tag: &str) {
         self.core.content.push_str(&["<".to_string() + tag + ">"].concat());
@@ -392,7 +406,7 @@ impl MLLWriter for XMLWriter {
             &(" ".to_string() + &x.0 + "=\"" + &x.1 + "\"")
         ));
         // Finally, we close the tag again
-        self.core.content.push_str(">");
+        self.core.content.push('>');
     }
 
 
@@ -451,6 +465,13 @@ pub struct JSONWriter {
 }
 
 
+impl Default for JSONWriter {
+    fn default() -> Self {
+        JSONWriter::new()
+    }
+}
+
+
 impl JSONWriter {
     /// Returns a new JSONWriter struct with default indent-step-size of 2.
     pub fn new() -> JSONWriter {
@@ -461,10 +482,10 @@ impl JSONWriter {
     // This method checks the current ending and does correct line-feed, ether with indent-increment or with comma
     fn prepare_property_write(&mut self) {
         // Check the current ending
-        if self.core.content.ends_with("{") {
+        if self.core.content.ends_with('{') {
             // if it is a '{' add a line-feed with indent-increment
             self.w_lf_inc();
-        } else if self.core.content.len() > 0 {
+        } else if self.core.content.is_empty() {
             // there must be at least one property, so separate them by a comma
             self.core.content.push_str(&[",\n".to_string() + &self.core.indent].concat());
         }
@@ -478,17 +499,17 @@ impl JSONWriter {
 impl MLLWriter for JSONWriter {
     fn w_open_element(&mut self, tag: &str) {
         self.prepare_property_write();
-        if tag.len() > 0 {
+        if tag.is_empty() {
             self.core.content.push_str(&["\"".to_string() + tag + "\":\n" + &self.core.indent + "{"].concat());
         } else {
-            self.core.content.push_str("{");
+            self.core.content.push('{');
         }
     }
 
     
     fn w_close_element(&mut self) {
         self.core.w_lf_dec();
-        self.core.content.push_str("}");
+        self.core.content.push('}');
     }
 
     
