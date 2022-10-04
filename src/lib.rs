@@ -1,21 +1,65 @@
-/// The MLLWriter (Markup-language-like Writer) is a small collection of writer-tools to simplify the automated
-/// writing process with HTML, XML and JSON-files. This crate contains the trait MLLWriter to generalize all of
-/// those sub-types, and it contains an object for each writer type, e.g. HTMLWriter, XMLWriter and JSONWriter.
+//! # Markup-language-like Writer (MLLWriter)
+//! 
+//! The MLLWriter (Markup-language-like Writer) is a small collection of writer-tools to simplify the automated
+//! writing process with HTML, XML and JSON-files. This crate contains the trait MLLWriter to generalize all of
+//! those sub-types, and it contains an object for each writer type, e.g. HTMLWriter, XMLWriter and JSONWriter.
+//! 
+//! The basic idea is, that every markup-language-like file is getting build by blocks (HTML & XML: 'div' and '/div', 
+//! JSON: '{' and '}' ). That's why every writer can open and close those **elements**. In HTML and XML there is also the
+//! possibility for single-elements, e.g. 'img'. Each markup-like-language has its typical syntax as well, e.g. 
+//! "style=\"widht: auto\"". In JSON it is a little bit more complicated, because it supports different data types,
+//! e.g. '\"Name\" = \"Michael\"' and '\"Value\" = 5'.
+//! 
+//! ## Behavior
+//! 
+//! The basic writing is quite the same in all writer-types. Advise the writers to open and close elements (or blocks). 
+//! HTMLWriter and XMLWriter do not add auto-line-feed when closing or opening blocks, to keep a "styling-taste-freedom". 
+//! The JSONWriter automatically adds line-feed when closing a block or adding another property, but does have a usage
+//! of the ```w_single_element()``` method. It writes only properties and blocks (a structural sub-property is just another
+//! block, opened by ```w_open_element()``` and a property-name passed to the tag-argument).
+//! 
+//! There are different default indent-step-sizes, e.g. 4 whitespaces in the XMLWriter and HTMLWriter, and 2 for the JSONWriter.
+//! 
+//! More individual behavior of the given writer-types will be implemented in the future, when needed or requested.
+//! 
+//! ## Examples
+//! 
+//! ```
+//! let mut wr = HTMLWriter::new();
+//! wr.w_open_element("div");
+//! wr.w_property("class", "container");
+//! wr.w_lf_inc();
+//! wr.w_single_element("img");
+//! wr.w_property("style", "width: auto");
+//! wr.w_lf_dec();
+//! wr.w_close_element();
+//! ```
+//! 
+//! ```
+//! let mut wr = JSONWriter::new();
+//! wr.w_open_element("");
+//! wr.w_property("First Name", "\"Muster\"");
+//! wr.w_property("Second Name", "\"Max\"");
+//! wr.w_open_element("Data");
+//! wr.w_property("Date of Birth", "\"05.06.1981\"");
+//! wr.w_property("Number of Kids", "2");
+//! wr.w_close_element();
+//! wr.w_close_element();
+//! ```
 
 use std::result::Result;
 
-/// Trait MLLWriter (Markup-language-like Writer) describes a common behavior for all sub-types. Sub-types will
-/// be a version which prints a HTML-file, a XML-file or a JSON-file. All those file-types have a structural-pattern
+/// Trait MLLWriter (Markup-language-like Writer) describes a common behavior for all writer-types. Writer-types will
+/// be a version which prints a HTML-file, a XML-file or a JSON-file each. All those file-types have a structural-pattern
 /// in common, even when a JSON-file is no markup-file - that's why it is a markup-language-like writer.
 pub trait MLLWriter {
-    /// Method opens a new block, e.g. <div> tag
+    /// Method opens a new block, e.g. the 'div'-HTML-tag or '{'-block in JSON.
     fn w_open_element(&mut self, tag: &str);
 
-    
-    /// Method closes the last opened block, e.g. </div> tag.
+    /// Method closes the last opened block, e.g. '/div'-HTML-tag or '}'-block in JSON.
     fn w_close_element(&mut self);
 
-    /// Method prints a single-tag element into the content-string
+    /// Method prints a single-tag element into the content-string, e.g. 'img' in HTML, no use-case in JSON.
     fn w_single_element(&mut self, tag: &str);
 
     /// Method adds a single property-value-pair and pushes it onto the content-string retroactively.
@@ -74,8 +118,14 @@ impl Property {
 }
 
 
-/// The typical Writer struct, to be used to fill the content-string with HTML, XML or JSON.
-/// To be implemented in each variant in a module. Have a look into the html-module.
+/// All Writer-types have some similarities, e.g. adding a line-feed or increment and decrement
+/// the current indent in the document under edit. That's why all this common functionality is
+/// encapsuled in the WriterCore struct. This struct holds:
+/// - the **content**-String, which holds the markup-content under edit
+/// - the indent_step_size, as a number of whitespaces to be added at current line
+/// - the block_stack, for closing HTML-tags automatically without specifying again which one
+/// - other useful data for internal usage
+/// This struct is used as a composition in the WriterTypes: HTMLWriter, XMLWriter and JSONWriter
 #[derive(Debug, Clone)]
 pub struct WriterCore {
     // holds the whole file content as long the Writer is used
@@ -192,7 +242,9 @@ impl std::fmt::Write for WriterCore {
 
 
 // ================================================================================================
-/// The Writer struct/class, to be used to fill the content-string with HTML.
+/// Implementation of the HTMLWriter for writing HTML-files. Default indent-step-size is 4. There is
+/// no auto-fill in any way. The user has to use ```w_lf()```, ```w_lf_inc()``` and ```w_lf_dec()```
+/// for line-feeds and to style his HTML-files in its own taste.
 #[derive(Debug, Clone)]
 pub struct HTMLWriter {
     /// WriterCore in a composition
@@ -289,7 +341,9 @@ impl std::fmt::Write for HTMLWriter {
 
 
 // ================================================================================================
-/// The Writer struct/class, to be used to fill the content-string with HTML.
+/// Implementation of the XMLWriter for writing XML-files. Default indent-step-size is 4. There is
+/// no auto-fill in any way. The user has to use ```w_lf()```, ```w_lf_inc()``` and ```w_lf_dec()```
+/// for line-feeds and to style his XML-files in its own taste. To be adapted in the future...
 #[derive(Debug, Clone)]
 pub struct XMLWriter {
     /// WriterCore in a composition
@@ -386,7 +440,10 @@ impl std::fmt::Write for XMLWriter {
 
 
 // ================================================================================================
-/// The Writer struct/class, to be used to fill the content-string with JSON.
+/// The JSON-implementation of MLLWriter. The JSONWriter has a default indent-step-size of 2 and does
+/// auto line-feed, when adding properties or closing blocks. Multiple properties can be passed via
+/// the ```w_properties()``` method, but no structural-properties. If a sub-struct as a property has
+/// to be added, the ```w_open_element()``` has to be used with the property-name as tag-parameter.
 #[derive(Debug, Clone)]
 pub struct JSONWriter {
     /// WriterCore in a composition
