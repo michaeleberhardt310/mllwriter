@@ -73,8 +73,8 @@ pub trait MLLWriter {
     /// It uses therefor the Property-struct definition to be able to accept an arbitrary number of properties.
     fn write_properties(&mut self, properties: &Property);
 
-    /// Method adds a line feed to content string and writes the current indent
-    fn write_lf(&mut self);
+    /// Method adds n line feed(s) to content string and writes the current indent
+    fn write_lf(&mut self, n: usize);
 
     /// Method meaningful combines inc_indent_step() and write_lf() 
     fn write_lf_inc(&mut self);
@@ -160,21 +160,21 @@ impl WriterCore {
     }
 
 
-    fn write_lf(&mut self, content: &mut String) {
-        content.push('\n');
+    fn write_lf(&mut self, content: &mut String, n: usize) {
+        for _i in 0..n { content.push('\n'); }
         content.push_str(&self.indent);
     }
 
 
     fn write_lf_inc(&mut self, content: &mut String) {
         self.inc_indent_step();
-        self.write_lf(content);
+        self.write_lf(content, 1);
     }
 
 
     fn write_lf_dec(&mut self, content: &mut String) {
         self.dec_indent_step();
-        self.write_lf(content);
+        self.write_lf(content, 1);
     }
 
 
@@ -291,7 +291,7 @@ impl MLLWriter for HTMLWriter {
     }
 
 
-    fn write_lf(&mut self) { self.core.write_lf(&mut self.content); }
+    fn write_lf(&mut self, n: usize) { self.core.write_lf(&mut self.content, n); }
     
     fn write_lf_inc(&mut self) { self.core.write_lf_inc(&mut self.content); }
 
@@ -422,7 +422,7 @@ impl MLLWriter for XMLWriter {
     }
 
 
-    fn write_lf(&mut self) { self.core.write_lf(&mut self.content); }
+    fn write_lf(&mut self, n: usize) { self.core.write_lf(&mut self.content, n); }
     
     fn write_lf_inc(&mut self) { self.core.write_lf_inc(&mut self.content); }
 
@@ -555,7 +555,7 @@ impl MLLWriter for JSONWriter {
     }
 
 
-    fn write_lf(&mut self) { self.core.write_lf(&mut self.content); }
+    fn write_lf(&mut self, n: usize) { self.core.write_lf(&mut self.content, n); }
     
     fn write_lf_inc(&mut self) { self.core.write_lf_inc(&mut self.content); }
 
