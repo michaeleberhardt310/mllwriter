@@ -15,8 +15,8 @@
 //! The basic writing is quite the same in all writer-types. Advise the writers to open and close elements (or blocks). 
 //! HTMLWriter and XMLWriter do not add auto-line-feed when closing or opening blocks, to keep a "styling-taste-freedom". 
 //! The JSONWriter automatically adds line-feed when closing a block or adding another property, but does have a usage
-//! of the ```w_single_element()``` method. It writes only properties and blocks (a structural sub-property is just another
-//! block, opened by ```w_open_element()``` and a property-name passed to the tag-argument).
+//! of the ```write_single_tag()``` method. It writes only properties and blocks (a structural sub-property is just another
+//! block, opened by ```write_open_tag()``` and a property-name passed to the tag-argument).
 //! 
 //! There are different default indent-step-sizes, e.g. 4 whitespaces in the XMLWriter and HTMLWriter, and 2 for the JSONWriter.
 //! 
@@ -28,27 +28,27 @@
 //! # use mllwriter::{MLLWriter,HTMLWriter};
 //! let mut wr = HTMLWriter::new();
 //! 
-//! wr.w_open_element("div");
-//! wr.w_property("class", "container");
-//! wr.w_lf_inc();
-//! wr.w_single_element("img");
-//! wr.w_property("style", "width: auto");
-//! wr.w_lf_dec();
-//! wr.w_close_element();
+//! wr.write_open_tag("div");
+//! wr.write_property("class", "container");
+//! wr.write_lf_inc();
+//! wr.write_single_tag("img");
+//! wr.write_property("style", "width: auto");
+//! wr.write_lf_dec();
+//! wr.write_close_tag();
 //! ```
 //! 
 //! ```
 //! # use mllwriter::{MLLWriter,JSONWriter};
 //! let mut wr = JSONWriter::new();
 //! 
-//! wr.w_open_element("");
-//! wr.w_property("First Name", "\"Muster\"");
-//! wr.w_property("Second Name", "\"Max\"");
-//! wr.w_open_element("Data");
-//! wr.w_property("Date of Birth", "\"05.06.1981\"");
-//! wr.w_property("Number of Kids", "2");
-//! wr.w_close_element();
-//! wr.w_close_element();
+//! wr.write_open_tag("");
+//! wr.write_property("First Name", "\"Muster\"");
+//! wr.write_property("Second Name", "\"Max\"");
+//! wr.write_open_tag("Data");
+//! wr.write_property("Date of Birth", "\"05.06.1981\"");
+//! wr.write_property("Number of Kids", "2");
+//! wr.write_close_tag();
+//! wr.write_close_tag();
 //! ```
 
 use std::result::Result;
@@ -58,29 +58,29 @@ use std::result::Result;
 /// in common, even when a JSON-file is no markup-file - that's why it is a markup-language-like writer.
 pub trait MLLWriter {
     /// Method opens a new block, e.g. the 'div'-HTML-tag or '{'-block in JSON.
-    fn w_open_element(&mut self, tag: &str);
+    fn write_open_tag(&mut self, tag: &str);
 
     /// Method closes the last opened block, e.g. '/div'-HTML-tag or '}'-block in JSON.
-    fn w_close_element(&mut self);
+    fn write_close_tag(&mut self);
 
     /// Method prints a single-tag element into the content-string, e.g. 'img' in HTML, no use-case in JSON.
-    fn w_single_element(&mut self, tag: &str);
+    fn write_single_tag(&mut self, tag: &str);
 
     /// Method adds a single property-value-pair and pushes it onto the content-string retroactively.
-    fn w_property(&mut self, name: &str, value: &str);
+    fn write_property(&mut self, name: &str, value: &str);
 
     /// Method generates a property-string out of given properties and pushes it onto content-string retroactively.
     /// It uses therefor the Property-struct definition to be able to accept an arbitrary number of properties.
-    fn w_properties(&mut self, properties: &Property);
+    fn write_properties(&mut self, properties: &Property);
 
     /// Method adds a line feed to content string and writes the current indent
-    fn w_lf(&mut self);
+    fn write_lf(&mut self);
 
-    /// Method meaningful combines inc_indent_step() and w_lf() 
-    fn w_lf_inc(&mut self);
+    /// Method meaningful combines inc_indent_step() and write_lf() 
+    fn write_lf_inc(&mut self);
 
-    /// Method meaningful combines dec_indent_step() and w_lf() 
-    fn w_lf_dec(&mut self);
+    /// Method meaningful combines dec_indent_step() and write_lf() 
+    fn write_lf_dec(&mut self);
 
     /// Method increases the current indent by indent_step_size
     fn inc_indent_step(&mut self);
@@ -160,21 +160,21 @@ impl WriterCore {
     }
 
 
-    fn w_lf(&mut self, content: &mut String) {
+    fn write_lf(&mut self, content: &mut String) {
         content.push('\n');
         content.push_str(&self.indent);
     }
 
 
-    fn w_lf_inc(&mut self, content: &mut String) {
+    fn write_lf_inc(&mut self, content: &mut String) {
         self.inc_indent_step();
-        self.w_lf(content);
+        self.write_lf(content);
     }
 
 
-    fn w_lf_dec(&mut self, content: &mut String) {
+    fn write_lf_dec(&mut self, content: &mut String) {
         self.dec_indent_step();
-        self.w_lf(content);
+        self.write_lf(content);
     }
 
 
@@ -206,7 +206,7 @@ impl WriterCore {
 
 // ================================================================================================
 /// Implementation of the HTMLWriter for writing HTML-files. Default indent-step-size is 4. There is
-/// no auto-fill in any way. The user has to use ```w_lf()```, ```w_lf_inc()``` and ```w_lf_dec()```
+/// no auto-fill in any way. The user has to use ```write_lf()```, ```write_lf_inc()``` and ```write_lf_dec()```
 /// for line-feeds and to style his HTML-files in its own taste.
 #[derive(Debug, Clone)]
 pub struct HTMLWriter {
@@ -236,7 +236,7 @@ impl Default for HTMLWriter {
 
 impl MLLWriter for HTMLWriter {
     /// Accepts only ASCII-lowercase
-    fn w_open_element(&mut self, tag: &str) {
+    fn write_open_tag(&mut self, tag: &str) {
         assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
 
         self.content.push('<');
@@ -246,7 +246,7 @@ impl MLLWriter for HTMLWriter {
     }
 
     
-    fn w_close_element(&mut self) {
+    fn write_close_tag(&mut self) {
         let tag = self.core.block_stack.pop().unwrap();
         self.content.push_str("</");
         self.content.push_str(&tag);
@@ -255,7 +255,7 @@ impl MLLWriter for HTMLWriter {
 
 
     /// Accepts only ASCII-lowercase
-    fn w_single_element(&mut self, tag: &str) {
+    fn write_single_tag(&mut self, tag: &str) {
         assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
 
         self.content.push('<');
@@ -265,7 +265,7 @@ impl MLLWriter for HTMLWriter {
 
 
     /// Accepts only ASCII-lowercase for the name-attribute
-    fn w_property(&mut self, name: &str, value: &str) {
+    fn write_property(&mut self, name: &str, value: &str) {
         assert!(name.chars().all(|x| x.is_ascii_lowercase()));
 
         // First we remove the '>' of the last entry
@@ -279,7 +279,7 @@ impl MLLWriter for HTMLWriter {
     }
 
     
-    fn w_properties(&mut self, properties: &Property) {
+    fn write_properties(&mut self, properties: &Property) {
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then, we add our property-string
@@ -291,11 +291,11 @@ impl MLLWriter for HTMLWriter {
     }
 
 
-    fn w_lf(&mut self) { self.core.w_lf(&mut self.content); }
+    fn write_lf(&mut self) { self.core.write_lf(&mut self.content); }
     
-    fn w_lf_inc(&mut self) { self.core.w_lf_inc(&mut self.content); }
+    fn write_lf_inc(&mut self) { self.core.write_lf_inc(&mut self.content); }
 
-    fn w_lf_dec(&mut self) { self.core.w_lf_dec(&mut self.content); }
+    fn write_lf_dec(&mut self) { self.core.write_lf_dec(&mut self.content); }
     
     fn inc_indent_step(&mut self) { self.core.inc_indent_step(); }
 
@@ -337,7 +337,7 @@ impl std::fmt::Write for HTMLWriter {
 
 // ================================================================================================
 /// Implementation of the XMLWriter for writing XML-files. Default indent-step-size is 2. There is
-/// no auto-fill in any way. The user has to use ```w_lf()```, ```w_lf_inc()``` and ```w_lf_dec()```
+/// no auto-fill in any way. The user has to use ```write_lf()```, ```write_lf_inc()``` and ```write_lf_dec()```
 /// for line-feeds and to style his XML-files in its own taste. To be adapted in the future...
 #[derive(Debug, Clone)]
 pub struct XMLWriter {
@@ -367,7 +367,7 @@ impl Default for XMLWriter {
 
 impl MLLWriter for XMLWriter {
     /// Accepts only ASCII-lowercase for the name-attribute
-    fn w_open_element(&mut self, tag: &str) {
+    fn write_open_tag(&mut self, tag: &str) {
         assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
 
         self.content.push('<');
@@ -377,7 +377,7 @@ impl MLLWriter for XMLWriter {
     }
 
     
-    fn w_close_element(&mut self) {
+    fn write_close_tag(&mut self) {
         let tag = self.core.block_stack.pop().unwrap();
         self.content.push_str("</");
         self.content.push_str(&tag);
@@ -386,7 +386,7 @@ impl MLLWriter for XMLWriter {
 
     
     /// Accepts only ASCII-lowercase for the name-attribute
-    fn w_single_element(&mut self, tag: &str) {
+    fn write_single_tag(&mut self, tag: &str) {
         assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
 
         self.content.push('<');
@@ -396,7 +396,7 @@ impl MLLWriter for XMLWriter {
 
     
     /// Accepts only ASCII-lowercase for the name-attribute
-    fn w_property(&mut self, name: &str, value: &str) {
+    fn write_property(&mut self, name: &str, value: &str) {
         assert!(name.chars().all(|x| x.is_ascii_lowercase()));
 
         // First we remove the '>' of the last entry
@@ -410,7 +410,7 @@ impl MLLWriter for XMLWriter {
     }
 
     
-    fn w_properties(&mut self, properties: &Property) {
+    fn write_properties(&mut self, properties: &Property) {
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then, we add our property-string
@@ -422,11 +422,11 @@ impl MLLWriter for XMLWriter {
     }
 
 
-    fn w_lf(&mut self) { self.core.w_lf(&mut self.content); }
+    fn write_lf(&mut self) { self.core.write_lf(&mut self.content); }
     
-    fn w_lf_inc(&mut self) { self.core.w_lf_inc(&mut self.content); }
+    fn write_lf_inc(&mut self) { self.core.write_lf_inc(&mut self.content); }
 
-    fn w_lf_dec(&mut self) { self.core.w_lf_dec(&mut self.content); }
+    fn write_lf_dec(&mut self) { self.core.write_lf_dec(&mut self.content); }
     
     fn inc_indent_step(&mut self) { self.core.inc_indent_step(); }
 
@@ -469,8 +469,8 @@ impl std::fmt::Write for XMLWriter {
 // ================================================================================================
 /// The JSON-implementation of MLLWriter. The JSONWriter has a default indent-step-size of 2 and does
 /// auto line-feed, when adding properties or closing blocks. Multiple properties can be passed via
-/// the ```w_properties()``` method, but no structural-properties. If a sub-struct as a property has
-/// to be added, the ```w_open_element()``` has to be used with the property-name as tag-parameter.
+/// the ```write_properties()``` method, but no structural-properties. If a sub-struct as a property has
+/// to be added, the ```write_open_tag()``` has to be used with the property-name as tag-parameter.
 #[derive(Debug, Clone)]
 pub struct JSONWriter {
     /// Content held by the writer
@@ -502,7 +502,7 @@ impl JSONWriter {
         // Check the current ending
         if self.content.ends_with('{') {
             // if it is a '{' add a line-feed with indent-increment
-            self.w_lf_inc();
+            self.write_lf_inc();
         } else if !self.content.is_empty() {
             // there must be at least one property, so separate them by a comma
             self.content.push_str(",\n");
@@ -512,11 +512,11 @@ impl JSONWriter {
 }
 
 
-// The philosophy here is, only to write the current desired task, nothing more! E.g. w_open_element()
-// writes only the '{' and nothing else. w_property() writes only the property. If a line feed or indent
+// The philosophy here is, only to write the current desired task, nothing more! E.g. write_open_tag()
+// writes only the '{' and nothing else. write_property() writes only the property. If a line feed or indent
 // is needed, the method checks the current ending and adds this task before adding the true task.
 impl MLLWriter for JSONWriter {
-    fn w_open_element(&mut self, tag: &str) {
+    fn write_open_tag(&mut self, tag: &str) {
         self.prepare_property_write();
         if !tag.is_empty() {
             self.content.push('\"');
@@ -530,18 +530,18 @@ impl MLLWriter for JSONWriter {
     }
 
     
-    fn w_close_element(&mut self) {
-        self.core.w_lf_dec(&mut self.content);
+    fn write_close_tag(&mut self) {
+        self.core.write_lf_dec(&mut self.content);
         self.content.push('}');
     }
 
     
-    fn w_single_element(&mut self, _tag: &str) {
+    fn write_single_tag(&mut self, _tag: &str) {
         panic!("there is no single_element in the JSONWriter");
     }
 
     
-    fn w_property(&mut self, name: &str, value: &str) {
+    fn write_property(&mut self, name: &str, value: &str) {
         self.prepare_property_write();
         self.content.push('\"');
         self.content.push_str(name);
@@ -550,16 +550,16 @@ impl MLLWriter for JSONWriter {
     }
 
     
-    fn w_properties(&mut self, properties: &Property) {
-        properties.p.iter().for_each(|x| self.w_property(&x.0, &x.1) );
+    fn write_properties(&mut self, properties: &Property) {
+        properties.p.iter().for_each(|x| self.write_property(&x.0, &x.1) );
     }
 
 
-    fn w_lf(&mut self) { self.core.w_lf(&mut self.content); }
+    fn write_lf(&mut self) { self.core.write_lf(&mut self.content); }
     
-    fn w_lf_inc(&mut self) { self.core.w_lf_inc(&mut self.content); }
+    fn write_lf_inc(&mut self) { self.core.write_lf_inc(&mut self.content); }
 
-    fn w_lf_dec(&mut self) { self.core.w_lf_dec(&mut self.content); }
+    fn write_lf_dec(&mut self) { self.core.write_lf_dec(&mut self.content); }
     
     fn inc_indent_step(&mut self) { self.core.inc_indent_step(); }
 
@@ -644,7 +644,7 @@ mod tests {
         assert_eq!(wr.core.indent, "");
         assert_eq!(wr.core.block_stack, Vec::<String>::new());
 
-        wr.w_open_element("div");
+        wr.write_open_tag("div");
         wr.set_indent_step(4);
         wr.set_indent_step_size(8);
         wr.clear();
@@ -657,28 +657,28 @@ mod tests {
     #[test]
     fn html_single_element() {
         let mut wr = HTMLWriter::new();
-        wr.w_single_element("img");
+        wr.write_single_tag("img");
         assert_eq!(wr.content, "<img>".to_string());
     }
 
     #[test]
     fn html_dual_elements() {
         let mut wr = HTMLWriter::new();
-        wr.w_open_element("div");
-        wr.w_close_element();
+        wr.write_open_tag("div");
+        wr.write_close_tag();
         assert_eq!(wr.content, "<div></div>".to_string());
     }
 
     #[test]
     fn html_mixed_entries() {
         let mut wr = HTMLWriter::new();
-        wr.w_open_element("div");
-        wr.w_property("class", "container");
-        wr.w_lf_inc();
-        wr.w_single_element("img");
-        wr.w_property("style", "width: auto");
-        wr.w_lf_dec();
-        wr.w_close_element();
+        wr.write_open_tag("div");
+        wr.write_property("class", "container");
+        wr.write_lf_inc();
+        wr.write_single_tag("img");
+        wr.write_property("style", "width: auto");
+        wr.write_lf_dec();
+        wr.write_close_tag();
         assert_eq!(wr.content, "<div class=\"container\">\n    <img style=\"width: auto\">\n</div>")
     }
 
@@ -687,13 +687,13 @@ mod tests {
         let mut properties = Property::new("class", "container");
         properties.add("style", "width: auto");
         let mut wr = HTMLWriter::new();
-        wr.w_single_element("img");
-        wr.w_properties(&properties);
+        wr.write_single_tag("img");
+        wr.write_properties(&properties);
         assert_eq!(wr.content, "<img class=\"container\" style=\"width: auto\">".to_string());
 
         wr.clear();
-        wr.w_single_element("img");
-        wr.w_property("style", "width: auto");
+        wr.write_single_tag("img");
+        wr.write_property("style", "width: auto");
         assert_eq!(wr.content, "<img style=\"width: auto\">");
     }
 
@@ -707,7 +707,7 @@ mod tests {
         assert_eq!(wr.core.indent, "");
         assert_eq!(wr.core.block_stack, Vec::<String>::new());
 
-        wr.w_open_element("div");
+        wr.write_open_tag("div");
         wr.set_indent_step(4);
         wr.set_indent_step_size(8);
         wr.clear();
@@ -720,28 +720,28 @@ mod tests {
     #[test]
     fn xml_single_element() {
         let mut wr = XMLWriter::new();
-        wr.w_single_element("img");
+        wr.write_single_tag("img");
         assert_eq!(wr.content, "<img>".to_string());
     }
 
     #[test]
     fn xml_dual_elements() {
         let mut wr = XMLWriter::new();
-        wr.w_open_element("div");
-        wr.w_close_element();
+        wr.write_open_tag("div");
+        wr.write_close_tag();
         assert_eq!(wr.content, "<div></div>".to_string());
     }
 
     #[test]
     fn xml_mixed_entries() {
         let mut wr = XMLWriter::new();
-        wr.w_open_element("div");
-        wr.w_property("class", "container");
-        wr.w_lf_inc();
-        wr.w_single_element("img");
-        wr.w_property("style", "width: auto");
-        wr.w_lf_dec();
-        wr.w_close_element();
+        wr.write_open_tag("div");
+        wr.write_property("class", "container");
+        wr.write_lf_inc();
+        wr.write_single_tag("img");
+        wr.write_property("style", "width: auto");
+        wr.write_lf_dec();
+        wr.write_close_tag();
         assert_eq!(wr.content, "<div class=\"container\">\n  <img style=\"width: auto\">\n</div>")
     }
 
@@ -750,13 +750,13 @@ mod tests {
         let mut properties = Property::new("class", "container");
         properties.add("style", "width: auto");
         let mut wr = XMLWriter::new();
-        wr.w_single_element("img");
-        wr.w_properties(&properties);
+        wr.write_single_tag("img");
+        wr.write_properties(&properties);
         assert_eq!(wr.content, "<img class=\"container\" style=\"width: auto\">".to_string());
 
         wr.clear();
-        wr.w_single_element("img");
-        wr.w_property("style", "width: auto");
+        wr.write_single_tag("img");
+        wr.write_property("style", "width: auto");
         assert_eq!(wr.content, "<img style=\"width: auto\">");
     }
 
@@ -765,27 +765,27 @@ mod tests {
     #[should_panic(expected = "there is no single_element in the JSONWriter")]
     fn json_single_element() {
         let mut wr = JSONWriter::new();
-        wr.w_single_element("img");    
+        wr.write_single_tag("img");    
     }
 
     #[test]
     fn json_dual_elements() {
         let mut wr = JSONWriter::new();
-        wr.w_open_element("");
-        wr.w_close_element();
+        wr.write_open_tag("");
+        wr.write_close_tag();
         assert_eq!(wr.content, "{\n}".to_string());
     }
 
     #[test]
     fn json_mixed_entries() {
         let mut wr = JSONWriter::new();
-        wr.w_open_element("");
-        wr.w_property("Name", "\"Eberhardt\"");
-        wr.w_property("Vorname", "\"Michael\"");
-        wr.w_open_element("Daten");
-        wr.w_property("Geburtstag", "\"03.10.1985\"");
-        wr.w_close_element();
-        wr.w_close_element();
+        wr.write_open_tag("");
+        wr.write_property("Name", "\"Eberhardt\"");
+        wr.write_property("Vorname", "\"Michael\"");
+        wr.write_open_tag("Daten");
+        wr.write_property("Geburtstag", "\"03.10.1985\"");
+        wr.write_close_tag();
+        wr.write_close_tag();
         assert_eq!(wr.content, 
             "{\n  \"Name\": \"Eberhardt\",\n  \"Vorname\": \"Michael\",\n  \"Daten\":\n  {\n    \"Geburtstag\": \"03.10.1985\"\n  }\n}"
         );
@@ -796,9 +796,9 @@ mod tests {
         let mut properties = Property::new("Name", "\"Eberhardt\"");
         properties.add("Alter", "35");
         let mut wr = JSONWriter::new();
-        wr.w_open_element("");
-        wr.w_properties(&properties);
-        wr.w_close_element();
+        wr.write_open_tag("");
+        wr.write_properties(&properties);
+        wr.write_close_tag();
         assert_eq!(wr.content, "{\n  \"Name\": \"Eberhardt\",\n  \"Alter\": 35\n}".to_string());
 
         wr.clear();
