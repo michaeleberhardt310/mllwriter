@@ -71,6 +71,9 @@ pub trait MLLWriter {
     /// Method prints a single-tag element into the content-string, e.g. 'img' in HTML, no use-case in JSON.
     fn single_tag(&mut self, tag: &str);
 
+    /// Combines single_tag() and add_property()
+    fn single_tag_w_property(&mut self, tag: &str, prop: &str, value: &str);
+
     /// Method adds a single property-value-pair and pushes it onto the content-string retroactively.
     fn add_property(&mut self, name: &str, value: &str);
 
@@ -274,6 +277,12 @@ impl MLLWriter for HTMLWriter {
     }
 
 
+    fn single_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
+        self.single_tag(tag);
+        self.add_property(prop, value);
+    }
+
+
     /// Accepts only ASCII-lowercase for the name-attribute
     fn add_property(&mut self, prop: &str, value: &str) {
         assert_html_notation(prop);
@@ -406,6 +415,12 @@ impl MLLWriter for XMLWriter {
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
+    }
+
+
+    fn single_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
+        self.single_tag(tag);
+        self.add_property(prop, value);
     }
 
     
@@ -557,6 +572,12 @@ impl MLLWriter for JSONWriter {
     
     fn single_tag(&mut self, _tag: &str) {
         panic!("there is no single_element in the JSONWriter");
+    }
+
+
+    fn single_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
+        self.single_tag(tag);
+        self.add_property(prop, value);
     }
 
     
