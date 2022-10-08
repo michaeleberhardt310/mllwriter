@@ -242,8 +242,7 @@ impl Default for HTMLWriter {
 impl MLLWriter for HTMLWriter {
     /// Accepts only ASCII-lowercase
     fn open_tag(&mut self, tag: &str) {
-        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
-
+        assert_html_notation(tag);
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
@@ -252,6 +251,7 @@ impl MLLWriter for HTMLWriter {
 
 
     fn open_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
+        assert_html_notation(tag);
         self.open_tag(tag);
         self.add_property(prop, value);
     }
@@ -267,8 +267,7 @@ impl MLLWriter for HTMLWriter {
 
     /// Accepts only ASCII-lowercase
     fn single_tag(&mut self, tag: &str) {
-        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
-
+        assert_html_notation(tag);
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
@@ -276,14 +275,13 @@ impl MLLWriter for HTMLWriter {
 
 
     /// Accepts only ASCII-lowercase for the name-attribute
-    fn add_property(&mut self, name: &str, value: &str) {
-        assert!(name.chars().all(|x| x.is_ascii_lowercase()));
-
+    fn add_property(&mut self, prop: &str, value: &str) {
+        assert_html_notation(prop);
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then add the property-value-pair and close the tag again after insertion
         self.content.push(' ');
-        self.content.push_str(name);
+        self.content.push_str(prop);
         self.content.push_str("=\"");
         self.content.push_str(value);
         self.content.push_str("\">");
@@ -379,8 +377,7 @@ impl Default for XMLWriter {
 impl MLLWriter for XMLWriter {
     /// Accepts only ASCII-lowercase for the name-attribute
     fn open_tag(&mut self, tag: &str) {
-        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
-
+        assert_html_notation(tag);
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
@@ -389,6 +386,7 @@ impl MLLWriter for XMLWriter {
 
 
     fn open_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
+        assert_html_notation(tag);
         self.open_tag(tag);
         self.add_property(prop, value);
     }
@@ -404,8 +402,7 @@ impl MLLWriter for XMLWriter {
     
     /// Accepts only ASCII-lowercase for the name-attribute
     fn single_tag(&mut self, tag: &str) {
-        assert!(tag.chars().all(|x| x.is_ascii_lowercase()));
-
+        assert_html_notation(tag);
         self.content.push('<');
         self.content.push_str(tag);
         self.content.push('>');
@@ -414,8 +411,7 @@ impl MLLWriter for XMLWriter {
     
     /// Accepts only ASCII-lowercase for the name-attribute
     fn add_property(&mut self, name: &str, value: &str) {
-        assert!(name.chars().all(|x| x.is_ascii_lowercase()));
-
+        assert_html_notation(name);
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then add the property-value-pair and close the tag again after insertion
@@ -619,6 +615,13 @@ impl std::fmt::Write for JSONWriter {
     fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> Result<(), std::fmt::Error> {
         self.content.write_fmt(args)
     }
+}
+
+
+// ================================================================================================
+fn assert_html_notation(tag: &str) {
+    assert!(tag.chars().all(|c| c.is_ascii_alphanumeric()));
+    assert!(tag.chars().filter(|c| c.is_ascii_alphabetic()).all(|c| c.is_lowercase()));
 }
 
 
