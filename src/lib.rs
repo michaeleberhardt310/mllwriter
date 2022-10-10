@@ -81,6 +81,9 @@ pub trait MLLWriter {
     /// It uses therefor the Property-struct definition to be able to accept an arbitrary number of properties.
     fn add_properties(&mut self, properties: &Property);
 
+    /// Method adds a single comment at current cursor position
+    fn add_comment(&mut self, comment: &str);
+
     /// Method adds n line feed(s) to content string and writes the current indent
     fn line_feed(&mut self, n: usize);
 
@@ -309,6 +312,13 @@ impl MLLWriter for HTMLWriter {
     }
 
 
+    fn add_comment(&mut self, comment: &str) {
+        self.content.push_str("<!-- ");
+        self.content.push_str(comment);
+        self.content.push_str(" -->");
+    }
+
+
     fn line_feed(&mut self, n: usize) { self.core.line_feed(&mut self.content, n); }
     
     fn line_feed_inc(&mut self) { self.core.line_feed_inc(&mut self.content); }
@@ -436,6 +446,13 @@ impl MLLWriter for XMLWriter {
         self.content.push_str(value);
         self.content.push_str("\">");
     }
+    
+    
+    fn add_comment(&mut self, comment: &str) {
+        self.content.push_str("<!-- ");
+        self.content.push_str(comment);
+        self.content.push_str(" -->");
+    }
 
     
     fn add_properties(&mut self, properties: &Property) {
@@ -504,7 +521,9 @@ pub struct JSONWriter {
     /// Content held by the writer
     pub content: String,
     /// WriterCore in a composition
-    pub core: WriterCore
+    pub core: WriterCore,
+    /// Counter for comments, interal
+    comment_cnt: usize
 }
 
 
@@ -520,7 +539,8 @@ impl JSONWriter {
     pub fn new() -> JSONWriter {
         JSONWriter { 
             content: String::new(),
-            core: WriterCore::new(2)
+            core: WriterCore::new(2),
+            comment_cnt: 0
         }
     }
 
@@ -592,6 +612,15 @@ impl MLLWriter for JSONWriter {
     
     fn add_properties(&mut self, properties: &Property) {
         properties.p.iter().for_each(|x| self.add_property(&x.0, &x.1) );
+    }
+
+
+    fn add_comment(&mut self, comment: &str) {
+        // Increase the comment counter before, because we init it with zero
+        self.comment_cnt += 1;
+        let prop = "_comment".to_string() + &self.comment_cnt.to_string();
+        let value = "\"".to_string() + comment + "\"";
+        self.add_property(&prop, &value);
     }
 
 
