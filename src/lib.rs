@@ -1,34 +1,34 @@
 //! # Markup-language-like Writer (MLLWriter)
-//! 
+//!
 //! The MLLWriter (Markup-language-like Writer) is a small collection of writer-tools to simplify the automated
 //! writing process with HTML, XML and JSON-files. This crate contains the trait MLLWriter to generalize all of
 //! those sub-types, and it contains an object for each writer type, e.g. HTMLWriter, XMLWriter and JSONWriter.
-//! 
-//! The basic idea is, that every markup-language-like file is getting build by blocks (HTML & XML: 'div' and '/div', 
+//!
+//! The basic idea is, that every markup-language-like file is getting build by blocks (HTML & XML: 'div' and '/div',
 //! JSON: '{' and '}' ). That's why every writer can open and close those **elements**. In HTML and XML there is also the
-//! possibility for single-elements, e.g. 'img'. Each markup-like-language has its typical syntax as well, e.g. 
+//! possibility for single-elements, e.g. 'img'. Each markup-like-language has its typical syntax as well, e.g.
 //! "style=\"widht: auto\"". In JSON it is a little bit more complicated, because it supports different data types,
 //! e.g. '\"Name\" = \"Michael\"' and '\"Value\" = 5'.
-//! 
+//!
 //! ## Behavior
-//! 
-//! The basic writing is quite the same in all writer-types. Advise the writers to open and close elements (or blocks). 
-//! HTMLWriter and XMLWriter do not add auto-line-feed when closing or opening blocks, to keep a "styling-taste-freedom". 
+//!
+//! The basic writing is quite the same in all writer-types. Advise the writers to open and close elements (or blocks).
+//! HTMLWriter and XMLWriter do not add auto-line-feed when closing or opening blocks, to keep a "styling-taste-freedom".
 //! The JSONWriter automatically adds line-feed when closing a block or adding another property, but does have a usage
 //! of the ```single_tag()``` method. It writes only properties and blocks (a structural sub-property is just another
 //! block, opened by ```open_tag()``` and a property-name passed to the tag-argument).
-//! 
+//!
 //! There are different default indent-step-sizes, e.g. 4 whitespaces in the XMLWriter and HTMLWriter, and 2 for the JSONWriter.
-//! 
+//!
 //! More individual behavior of the given writer-types will be implemented in the future, when needed or requested.
-//! 
+//!
 //! ## Examples
-//! 
+//!
 //! In this example a html-div-tag will be written with a certain id and class, and it will enclose an img-single-tag.
 //! ```
 //! # use mllwriter::{MLLWriter,HTMLWriter};
 //! let mut wr = HTMLWriter::new();
-//! 
+//!
 //! wr.open_tag_w_property("div", "class", "container");
 //! wr.add_property("id", "logo");
 //! wr.line_feed_inc();
@@ -37,12 +37,12 @@
 //! wr.line_feed_dec();
 //! wr.close_tag();
 //! ```
-//! 
+//!
 //! This example writes a simple JSON-file with a couple of properties.
 //! ```
 //! # use mllwriter::{MLLWriter,JSONWriter};
 //! let mut wr = JSONWriter::new();
-//! 
+//!
 //! wr.open_tag("");
 //! wr.add_property("First Name", "\"Muster\"");
 //! wr.add_property("Second Name", "\"Max\"");
@@ -87,10 +87,10 @@ pub trait MLLWriter {
     /// Method adds n line feed(s) to content string and writes the current indent
     fn line_feed(&mut self, n: usize);
 
-    /// Method meaningful combines inc_indent_step() and line_feed() 
+    /// Method meaningful combines inc_indent_step() and line_feed()
     fn line_feed_inc(&mut self);
 
-    /// Method meaningful combines dec_indent_step() and line_feed() 
+    /// Method meaningful combines dec_indent_step() and line_feed()
     fn line_feed_dec(&mut self);
 
     /// Method increases the current indent by indent_step_size
@@ -111,18 +111,16 @@ pub trait MLLWriter {
     fn clear(&mut self);
 }
 
-
 /// The Property struct simplifies to encapsule several properties, e.g. class="superhero" and style="width: auto". These can
 /// be passed to the Writer, which pushes it onto the content-string in the right way
 pub struct Property {
-    pub(crate) p: Vec<(String,String)>
+    pub(crate) p: Vec<(String, String)>,
 }
-
 
 impl Property {
     /// A default new method with one first property pair to be passed
     pub fn new(name: &str, value: &str) -> Property {
-        let mut p = Property{ p: Vec::new() };
+        let mut p = Property { p: Vec::new() };
         p.p.push((name.to_string(), value.to_string()));
         p
     }
@@ -132,7 +130,6 @@ impl Property {
         self.p.push((name.to_string(), value.to_string()));
     }
 }
-
 
 /// All Writer-types have some similarities, e.g. adding a line-feed or increment and decrement
 /// the current indent in the document under edit. That's why all this common functionality is
@@ -149,20 +146,18 @@ pub struct WriterCore {
     // holds the current indent as a string for quick adding into content
     pub(crate) indent: String,
     // holds a stack with opened/unclosed block-tags
-    pub(crate) block_stack: Vec<String>
+    pub(crate) block_stack: Vec<String>,
 }
-
 
 impl WriterCore {
     // Methods to be implemented by each subtype individually
     fn new(indent_step_size: usize) -> WriterCore {
-        WriterCore{
+        WriterCore {
             indent_step_size,
             indent: String::new(),
             block_stack: Vec::new(),
         }
     }
-
 
     fn clear(&mut self, indent_step: usize) {
         self.indent_step_size = indent_step;
@@ -170,29 +165,27 @@ impl WriterCore {
         self.block_stack.clear();
     }
 
-
     fn line_feed(&mut self, content: &mut String, n: usize) {
-        for _i in 0..n { content.push('\n'); }
+        for _i in 0..n {
+            content.push('\n');
+        }
         content.push_str(&self.indent);
     }
-
 
     fn line_feed_inc(&mut self, content: &mut String) {
         self.inc_indent_step();
         self.line_feed(content, 1);
     }
 
-
     fn line_feed_dec(&mut self, content: &mut String) {
         self.dec_indent_step();
         self.line_feed(content, 1);
     }
 
-
     fn inc_indent_step(&mut self) {
-        self.indent.push_str(" ".repeat(self.indent_step_size).as_str());
+        self.indent
+            .push_str(" ".repeat(self.indent_step_size).as_str());
     }
-
 
     fn dec_indent_step(&mut self) {
         let len = self.indent.len();
@@ -203,17 +196,14 @@ impl WriterCore {
         }
     }
 
-
     pub fn set_indent_step(&mut self, indent_step: usize) {
         self.indent = " ".repeat(indent_step * self.indent_step_size);
     }
-
 
     pub fn set_indent_step_size(&mut self, indent_step_size: usize) {
         self.indent_step_size = indent_step_size;
     }
 }
-
 
 // ================================================================================================
 /// Implementation of the HTMLWriter for writing HTML-files. Default indent-step-size is 4. There is
@@ -224,26 +214,23 @@ pub struct HTMLWriter {
     /// Content held by the writer
     pub content: String,
     /// WriterCore in a composition
-    pub core: WriterCore
+    pub core: WriterCore,
 }
-
 
 impl HTMLWriter {
     pub fn new() -> HTMLWriter {
-        HTMLWriter { 
+        HTMLWriter {
             content: String::new(),
-            core: WriterCore::new(4)
+            core: WriterCore::new(4),
         }
     }
 }
-
 
 impl Default for HTMLWriter {
     fn default() -> Self {
         HTMLWriter::new()
     }
 }
-
 
 impl MLLWriter for HTMLWriter {
     /// Accepts only ASCII-lowercase
@@ -255,21 +242,18 @@ impl MLLWriter for HTMLWriter {
         self.core.block_stack.push(tag.to_string());
     }
 
-
     fn open_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
         assert_html_notation(tag);
         self.open_tag(tag);
         self.add_property(prop, value);
     }
 
-    
     fn close_tag(&mut self) {
         let tag = self.core.block_stack.pop().unwrap();
         self.content.push_str("</");
         self.content.push_str(&tag);
         self.content.push('>');
     }
-
 
     /// Accepts only ASCII-lowercase
     fn single_tag(&mut self, tag: &str) {
@@ -279,12 +263,10 @@ impl MLLWriter for HTMLWriter {
         self.content.push('>');
     }
 
-
     fn single_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
         self.single_tag(tag);
         self.add_property(prop, value);
     }
-
 
     /// Accepts only ASCII-lowercase for the name-attribute
     fn add_property(&mut self, prop: &str, value: &str) {
@@ -299,18 +281,17 @@ impl MLLWriter for HTMLWriter {
         self.content.push_str("\">");
     }
 
-    
     fn add_properties(&mut self, properties: &Property) {
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then, we add our property-string
-        properties.p.iter().for_each(|x| self.content.push_str(
-            &(" ".to_string() + &x.0 + "=\"" + &x.1 + "\"")
-        ));
+        properties.p.iter().for_each(|x| {
+            self.content
+                .push_str(&(" ".to_string() + &x.0 + "=\"" + &x.1 + "\""))
+        });
         // Finally, we close the tag again
         self.content.push('>');
     }
-
 
     fn add_comment(&mut self, comment: &str) {
         self.content.push_str("<!-- ");
@@ -318,35 +299,52 @@ impl MLLWriter for HTMLWriter {
         self.content.push_str(" -->");
     }
 
+    fn line_feed(&mut self, n: usize) {
+        self.core.line_feed(&mut self.content, n);
+    }
 
-    fn line_feed(&mut self, n: usize) { self.core.line_feed(&mut self.content, n); }
-    
-    fn line_feed_inc(&mut self) { self.core.line_feed_inc(&mut self.content); }
+    fn line_feed_inc(&mut self) {
+        self.core.line_feed_inc(&mut self.content);
+    }
 
-    fn line_feed_dec(&mut self) { self.core.line_feed_dec(&mut self.content); }
-    
-    fn inc_indent_step(&mut self) { self.core.inc_indent_step(); }
+    fn line_feed_dec(&mut self) {
+        self.core.line_feed_dec(&mut self.content);
+    }
 
-    fn dec_indent_step(&mut self) { self.core.dec_indent_step(); }
+    fn inc_indent_step(&mut self) {
+        self.core.inc_indent_step();
+    }
 
-    fn set_indent_step(&mut self, indent_step: usize) { self.core.set_indent_step(indent_step); }
+    fn dec_indent_step(&mut self) {
+        self.core.dec_indent_step();
+    }
 
-    fn set_indent_step_size(&mut self, indent_step_size: usize) { self.core.set_indent_step_size(indent_step_size); }
+    fn set_indent_step(&mut self, indent_step: usize) {
+        self.core.set_indent_step(indent_step);
+    }
 
-    fn clear(&mut self) { 
-        self.content.clear(); 
+    fn set_indent_step_size(&mut self, indent_step_size: usize) {
+        self.core.set_indent_step_size(indent_step_size);
+    }
+
+    fn clear(&mut self) {
+        self.content.clear();
         self.core.clear(4);
     }
 }
 
-
 impl std::fmt::Display for HTMLWriter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "indent_step_size: {}\nindent: {}\nblock_stack: {:?}\n{}\n",
-            self.core.indent_step_size, self.core.indent.len(), self.core.block_stack, self.content)
+        write!(
+            f,
+            "indent_step_size: {}\nindent: {}\nblock_stack: {:?}\n{}\n",
+            self.core.indent_step_size,
+            self.core.indent.len(),
+            self.core.block_stack,
+            self.content
+        )
     }
 }
-
 
 impl std::fmt::Write for HTMLWriter {
     fn write_str(&mut self, s: &str) -> Result<(), std::fmt::Error> {
@@ -362,7 +360,6 @@ impl std::fmt::Write for HTMLWriter {
     }
 }
 
-
 // ================================================================================================
 /// Implementation of the XMLWriter for writing XML-files. Default indent-step-size is 2. There is
 /// no auto-fill in any way. The user has to use ```line_feed()```, ```line_feed_inc()``` and ```line_feed_dec()```
@@ -372,26 +369,23 @@ pub struct XMLWriter {
     /// Content held by the writer
     pub content: String,
     /// WriterCore in a composition
-    pub core: WriterCore
+    pub core: WriterCore,
 }
-
 
 impl XMLWriter {
     pub fn new() -> XMLWriter {
-        XMLWriter { 
+        XMLWriter {
             content: String::new(),
-            core: WriterCore::new(2) 
+            core: WriterCore::new(2),
         }
     }
 }
-
 
 impl Default for XMLWriter {
     fn default() -> Self {
         XMLWriter::new()
     }
 }
-
 
 impl MLLWriter for XMLWriter {
     /// Accepts only ASCII-lowercase for the name-attribute
@@ -403,14 +397,12 @@ impl MLLWriter for XMLWriter {
         self.core.block_stack.push(tag.to_string());
     }
 
-
     fn open_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
         assert_html_notation(tag);
         self.open_tag(tag);
         self.add_property(prop, value);
     }
 
-    
     fn close_tag(&mut self) {
         let tag = self.core.block_stack.pop().unwrap();
         self.content.push_str("</");
@@ -418,7 +410,6 @@ impl MLLWriter for XMLWriter {
         self.content.push('>');
     }
 
-    
     /// Accepts only ASCII-lowercase for the name-attribute
     fn single_tag(&mut self, tag: &str) {
         assert_html_notation(tag);
@@ -427,13 +418,11 @@ impl MLLWriter for XMLWriter {
         self.content.push('>');
     }
 
-
     fn single_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
         self.single_tag(tag);
         self.add_property(prop, value);
     }
 
-    
     /// Accepts only ASCII-lowercase for the name-attribute
     fn add_property(&mut self, name: &str, value: &str) {
         assert_html_notation(name);
@@ -446,55 +435,71 @@ impl MLLWriter for XMLWriter {
         self.content.push_str(value);
         self.content.push_str("\">");
     }
-    
-    
+
     fn add_comment(&mut self, comment: &str) {
         self.content.push_str("<!-- ");
         self.content.push_str(comment);
         self.content.push_str(" -->");
     }
 
-    
     fn add_properties(&mut self, properties: &Property) {
         // First we remove the '>' of the last entry
         self.content.pop();
         // Then, we add our property-string
-        properties.p.iter().for_each(|x| self.content.push_str(
-            &(" ".to_string() + &x.0 + "=\"" + &x.1 + "\"")
-        ));
+        properties.p.iter().for_each(|x| {
+            self.content
+                .push_str(&(" ".to_string() + &x.0 + "=\"" + &x.1 + "\""))
+        });
         // Finally, we close the tag again
         self.content.push('>');
     }
 
+    fn line_feed(&mut self, n: usize) {
+        self.core.line_feed(&mut self.content, n);
+    }
 
-    fn line_feed(&mut self, n: usize) { self.core.line_feed(&mut self.content, n); }
-    
-    fn line_feed_inc(&mut self) { self.core.line_feed_inc(&mut self.content); }
+    fn line_feed_inc(&mut self) {
+        self.core.line_feed_inc(&mut self.content);
+    }
 
-    fn line_feed_dec(&mut self) { self.core.line_feed_dec(&mut self.content); }
-    
-    fn inc_indent_step(&mut self) { self.core.inc_indent_step(); }
+    fn line_feed_dec(&mut self) {
+        self.core.line_feed_dec(&mut self.content);
+    }
 
-    fn dec_indent_step(&mut self) { self.core.dec_indent_step(); }
+    fn inc_indent_step(&mut self) {
+        self.core.inc_indent_step();
+    }
 
-    fn set_indent_step(&mut self, indent_step: usize) { self.core.set_indent_step(indent_step); }
+    fn dec_indent_step(&mut self) {
+        self.core.dec_indent_step();
+    }
 
-    fn set_indent_step_size(&mut self, indent_step_size: usize) { self.core.set_indent_step_size(indent_step_size); }
+    fn set_indent_step(&mut self, indent_step: usize) {
+        self.core.set_indent_step(indent_step);
+    }
 
-    fn clear(&mut self) { 
-        self.core.clear(2); 
+    fn set_indent_step_size(&mut self, indent_step_size: usize) {
+        self.core.set_indent_step_size(indent_step_size);
+    }
+
+    fn clear(&mut self) {
+        self.core.clear(2);
         self.content.clear();
     }
 }
 
-
 impl std::fmt::Display for XMLWriter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "indent_step_size: {}\nindent: {}\nblock_stack: {:?}\n{}\n",
-            self.core.indent_step_size, self.core.indent.len(), self.core.block_stack, self.content)
+        write!(
+            f,
+            "indent_step_size: {}\nindent: {}\nblock_stack: {:?}\n{}\n",
+            self.core.indent_step_size,
+            self.core.indent.len(),
+            self.core.block_stack,
+            self.content
+        )
     }
 }
-
 
 impl std::fmt::Write for XMLWriter {
     fn write_str(&mut self, s: &str) -> Result<(), std::fmt::Error> {
@@ -510,7 +515,6 @@ impl std::fmt::Write for XMLWriter {
     }
 }
 
-
 // ================================================================================================
 /// The JSON-implementation of MLLWriter. The JSONWriter has a default indent-step-size of 2 and does
 /// auto line-feed, when adding properties or closing blocks. Multiple properties can be passed via
@@ -523,9 +527,8 @@ pub struct JSONWriter {
     /// WriterCore in a composition
     pub core: WriterCore,
     /// Counter for comments, interal
-    comment_cnt: usize
+    comment_cnt: usize,
 }
-
 
 impl Default for JSONWriter {
     fn default() -> Self {
@@ -533,17 +536,15 @@ impl Default for JSONWriter {
     }
 }
 
-
 impl JSONWriter {
     /// Returns a new JSONWriter struct with default indent-step-size of 2.
     pub fn new() -> JSONWriter {
-        JSONWriter { 
+        JSONWriter {
             content: String::new(),
             core: WriterCore::new(2),
-            comment_cnt: 0
+            comment_cnt: 0,
         }
     }
-
 
     // This method checks the current ending and does correct line-feed, ether with indent-increment or with comma
     fn prepare_property_write(&mut self) {
@@ -558,7 +559,6 @@ impl JSONWriter {
         }
     }
 }
-
 
 // The philosophy here is, only to write the current desired task, nothing more! E.g. open_tag()
 // writes only the '{' and nothing else. add_property() writes only the property. If a line feed or indent
@@ -577,30 +577,25 @@ impl MLLWriter for JSONWriter {
         }
     }
 
-
     fn open_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
         self.open_tag(tag);
         self.add_property(prop, value);
     }
 
-    
     fn close_tag(&mut self) {
         self.core.line_feed_dec(&mut self.content);
         self.content.push('}');
     }
 
-    
     fn single_tag(&mut self, _tag: &str) {
         panic!("there is no single_element in the JSONWriter");
     }
-
 
     fn single_tag_w_property(&mut self, tag: &str, prop: &str, value: &str) {
         self.single_tag(tag);
         self.add_property(prop, value);
     }
 
-    
     fn add_property(&mut self, name: &str, value: &str) {
         self.prepare_property_write();
         self.content.push('\"');
@@ -609,11 +604,12 @@ impl MLLWriter for JSONWriter {
         self.content.push_str(value);
     }
 
-    
     fn add_properties(&mut self, properties: &Property) {
-        properties.p.iter().for_each(|x| self.add_property(&x.0, &x.1) );
+        properties
+            .p
+            .iter()
+            .for_each(|x| self.add_property(&x.0, &x.1));
     }
-
 
     fn add_comment(&mut self, comment: &str) {
         // Increase the comment counter before, because we init it with zero
@@ -623,35 +619,52 @@ impl MLLWriter for JSONWriter {
         self.add_property(&prop, &value);
     }
 
+    fn line_feed(&mut self, n: usize) {
+        self.core.line_feed(&mut self.content, n);
+    }
 
-    fn line_feed(&mut self, n: usize) { self.core.line_feed(&mut self.content, n); }
-    
-    fn line_feed_inc(&mut self) { self.core.line_feed_inc(&mut self.content); }
+    fn line_feed_inc(&mut self) {
+        self.core.line_feed_inc(&mut self.content);
+    }
 
-    fn line_feed_dec(&mut self) { self.core.line_feed_dec(&mut self.content); }
-    
-    fn inc_indent_step(&mut self) { self.core.inc_indent_step(); }
+    fn line_feed_dec(&mut self) {
+        self.core.line_feed_dec(&mut self.content);
+    }
 
-    fn dec_indent_step(&mut self) { self.core.dec_indent_step(); }
+    fn inc_indent_step(&mut self) {
+        self.core.inc_indent_step();
+    }
 
-    fn set_indent_step(&mut self, indent_step: usize) { self.core.set_indent_step(indent_step); }
+    fn dec_indent_step(&mut self) {
+        self.core.dec_indent_step();
+    }
 
-    fn set_indent_step_size(&mut self, indent_step_size: usize) { self.core.set_indent_step_size(indent_step_size); }
+    fn set_indent_step(&mut self, indent_step: usize) {
+        self.core.set_indent_step(indent_step);
+    }
 
-    fn clear(&mut self) { 
+    fn set_indent_step_size(&mut self, indent_step_size: usize) {
+        self.core.set_indent_step_size(indent_step_size);
+    }
+
+    fn clear(&mut self) {
         self.core.clear(2);
         self.content.clear();
     }
 }
 
-
 impl std::fmt::Display for JSONWriter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "indent_step_size: {}\nindent: {}\nblock_stack: {:?}\n{}\n",
-            self.core.indent_step_size, self.core.indent.len(), self.core.block_stack, self.content)
+        write!(
+            f,
+            "indent_step_size: {}\nindent: {}\nblock_stack: {:?}\n{}\n",
+            self.core.indent_step_size,
+            self.core.indent.len(),
+            self.core.block_stack,
+            self.content
+        )
     }
 }
-
 
 impl std::fmt::Write for JSONWriter {
     fn write_str(&mut self, s: &str) -> Result<(), std::fmt::Error> {
@@ -667,13 +680,14 @@ impl std::fmt::Write for JSONWriter {
     }
 }
 
-
 // ================================================================================================
 fn assert_html_notation(tag: &str) {
     assert!(tag.chars().all(|c| c.is_ascii_alphanumeric()));
-    assert!(tag.chars().filter(|c| c.is_ascii_alphabetic()).all(|c| c.is_lowercase()));
+    assert!(tag
+        .chars()
+        .filter(|c| c.is_ascii_alphabetic())
+        .all(|c| c.is_lowercase()));
 }
-
 
 // ================================================================================================
 #[cfg(test)]
@@ -759,7 +773,10 @@ mod tests {
         wr.add_property("style", "width: auto");
         wr.line_feed_dec();
         wr.close_tag();
-        assert_eq!(wr.content, "<div class=\"container\">\n    <img style=\"width: auto\">\n</div>")
+        assert_eq!(
+            wr.content,
+            "<div class=\"container\">\n    <img style=\"width: auto\">\n</div>"
+        )
     }
 
     #[test]
@@ -769,7 +786,10 @@ mod tests {
         let mut wr = HTMLWriter::new();
         wr.single_tag("img");
         wr.add_properties(&properties);
-        assert_eq!(wr.content, "<img class=\"container\" style=\"width: auto\">".to_string());
+        assert_eq!(
+            wr.content,
+            "<img class=\"container\" style=\"width: auto\">".to_string()
+        );
 
         wr.clear();
         wr.single_tag("img");
@@ -826,7 +846,10 @@ mod tests {
         wr.add_property("style", "width: auto");
         wr.line_feed_dec();
         wr.close_tag();
-        assert_eq!(wr.content, "<div class=\"container\">\n  <img style=\"width: auto\">\n</div>")
+        assert_eq!(
+            wr.content,
+            "<div class=\"container\">\n  <img style=\"width: auto\">\n</div>"
+        )
     }
 
     #[test]
@@ -836,7 +859,10 @@ mod tests {
         let mut wr = XMLWriter::new();
         wr.single_tag("img");
         wr.add_properties(&properties);
-        assert_eq!(wr.content, "<img class=\"container\" style=\"width: auto\">".to_string());
+        assert_eq!(
+            wr.content,
+            "<img class=\"container\" style=\"width: auto\">".to_string()
+        );
 
         wr.clear();
         wr.single_tag("img");
@@ -849,7 +875,7 @@ mod tests {
     #[should_panic(expected = "there is no single_element in the JSONWriter")]
     fn json_single_element() {
         let mut wr = JSONWriter::new();
-        wr.single_tag("img");    
+        wr.single_tag("img");
     }
 
     #[test]
@@ -874,7 +900,8 @@ mod tests {
         wr.add_property("Geburtstag", "\"03.10.1985\"");
         wr.close_tag();
         wr.close_tag();
-        assert_eq!(wr.content, 
+        assert_eq!(
+            wr.content,
             "{\n  \"Name\": \"Eberhardt\",\n  \"Vorname\": \"Michael\",\n  \"Daten\":\n  {\n    \"Geburtstag\": \"03.10.1985\"\n  }\n}"
         );
     }
@@ -887,13 +914,14 @@ mod tests {
         wr.open_tag("");
         wr.add_properties(&properties);
         wr.close_tag();
-        assert_eq!(wr.content, "{\n  \"Name\": \"Eberhardt\",\n  \"Alter\": 35\n}".to_string());
+        assert_eq!(
+            wr.content,
+            "{\n  \"Name\": \"Eberhardt\",\n  \"Alter\": 35\n}".to_string()
+        );
 
         wr.clear();
         assert_eq!(wr.content, "");
     }
-
 }
-
 
 // ================================================================================================
